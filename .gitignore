@@ -1,11 +1,15 @@
 # Prerequisites
 *.d
 
+
 # Object files
 *.o
+*.so
 *.ko
 *.obj
 *.elf
+*.class
+*.dll
 
 # Linker output
 *.ilk
@@ -50,3 +54,20 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
+
+#忽略IDE和编辑器生成的文件
+.idea/
+.vscode/
+/.swp
+DebugConfig/
+Listings/
+Objects/
+
+#忽略日志文件和调试文件
+*.log
+.pdb
+.json
+
+#忽略敏感信息文件
+passwords.txt
+private_key.pem
