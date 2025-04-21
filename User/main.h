@@ -26,7 +26,7 @@ extern const float V_OFFSET; // 电压偏移量，单位V
 extern __IO uint16_t ADC_ConvertedValue[2];
 extern u8 protect_status; // 保护状态
 extern u8 sw_status;      // 开关状态
-#define V_xishu 10.1217
+#define V_xishu 10.1215   // 测得10.112-10.115之间
 #define I_xishu 2.04
 
 #endif
