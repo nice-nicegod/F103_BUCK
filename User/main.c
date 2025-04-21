@@ -19,14 +19,15 @@ OLED屏幕:SCL:PB1,SDA:PB0
 按键:ADD(+):PB12 REDUCE(-):PB13 SET:PB14 MODE:PB15
 ************************************************************/
 
-u8 protect_status = 1; // 过压或过流保护状态标志，1为断开输入，0为连接输入，若触发保护，则需复位程序
+u8 protect_status = 0; // 过压或过流保护状态标志，1为断开输入，0为连接输入，若触发保护，则需复位程序
 u8 sw_status = 0;	   // 继电器开关状态
 u8 pid_mode = 0;	   //=0不工作，=1工作
 u16 buck_pwm = 2160;   // pid不工作时电路的PWM
 
-float DC_V = 0.0f;		// 电压数据
-float Target_V = 9.00f; // 追踪的电压数据
-float DC_I = 0.0f;		// 电流数据
+float DC_V = 0.0f;			  // 电压数据
+float Target_V = 9.00f;		  // 追踪的电压数据
+float DC_I = 0.0f;			  // 电流数据
+const float V_OFFSET = 0.05f; // 电压偏移量，单位V
 
 float V_yuzhi = 20.00f; // 保护的电压阈值
 float I_yuzhi = 2.50f;	// 保护的电流阈值
@@ -80,6 +81,8 @@ loop:
 		OLED_ShowNum(96, 2, (u16)(DC_I * 100) % 100, 2, 16);
 		OLED_ShowNum(72, 4, Target_V, 2, 16);
 		OLED_ShowNum(96, 4, (u16)(Target_V * 100) % 100, 2, 16);
+		OLED_ShowCHinese(84, 6, 13);
+		OLED_ShowCHinese(100, 6, 14);
 		Delay_Ms(50);
 	}
 	while (1)
@@ -121,6 +124,7 @@ loop:
 			SD_OFF;
 			sw_status = 0;
 			pid_mode = 0; // 失能PID
+			buck_pwm = 2160;
 			goto loop;
 		}
 
@@ -140,20 +144,32 @@ void TIM3_IRQHandler(void)
 {
 	static u16 data_count = 0;
 	static float v_out = 0, i_out = 0;
+
 	if (TIM_GetITStatus(TIM3, TIM_IT_Update) != RESET)
 	{
+		// 读取ADC值并累加，转换为电压
+		float adc_v = (float)ADC_ConvertedValue[0] / 4096 * 3.3;
+		float adc_i = (float)ADC_ConvertedValue[1] / 4096 * 3.3;
+
+		v_out += adc_v;
+		i_out += adc_i;
 		data_count++;
-		// 电压电流检测
-		v_out += (float)ADC_ConvertedValue[0] / 4096 * 3.3; // 读取转换的电压值
-		i_out += (float)ADC_ConvertedValue[1] / 4096 * 3.3; // 读取转换F的电压值
+
+		// 累积300个样本后计算平均值
 		if (data_count >= 300)
 		{
 			data_count = 0;
-			DC_V = v_out / 300 * V_xishu; // 读取转换的电压值
-			DC_I = i_out / 300 * I_xishu; // 读取转换的电压值
+			DC_V = v_out / 300 * V_xishu;
+			DC_I = i_out / 300 * I_xishu;
+
+			// 补偿电压偏移
+			DC_V = (DC_V >= V_OFFSET) ? (DC_V - V_OFFSET) : 0;
+
+			// 重置累加器
 			v_out = 0;
 			i_out = 0;
 		}
-		TIM_ClearITPendingBit(TIM3, TIM_IT_Update); // 清除TIM3溢出中断标志
+
+		TIM_ClearITPendingBit(TIM3, TIM_IT_Update);
 	}
 }

@@ -71,7 +71,6 @@ extern __IO uint16_t ADC_ConvertedValue[2];
 extern float ADC_ConvertedValueLocal;
 extern float ADC_ConvertedValueLoca2;
 
-// 中断服务函数
 void TIM1_UP_IRQHandler(void)
 {
 	static u16 pid_count = 0;
@@ -93,16 +92,21 @@ void TIM1_UP_IRQHandler(void)
 			}
 			else if (pid_mode == 1)
 			{
-				// PID模式：自动调节PWM值
-				float target_adc = Target_V / 3.3 * 4096 / V_xishu;
+				// 考虑漂移电压的PID控制
+				// 将目标电压也考虑漂移偏移
+				float adjusted_target_v = Target_V + V_OFFSET; // 加上偏移以补偿
+				float target_adc = adjusted_target_v / 3.3 * 4096 / V_xishu;
+
+				// 获取当前ADC值 (考虑使用滤波后的值会更稳定)
+				float current_adc = ADC_ConvertedValue[0];
 
 				// 简化后的PID控制逻辑
-				if (ADC_ConvertedValue[0] < target_adc)
+				if (current_adc < target_adc)
 				{
 					// 输出电压低于目标：增加PWM
 					buck_pwm += 1;
 				}
-				else if (ADC_ConvertedValue[0] > target_adc)
+				else if (current_adc > target_adc)
 				{
 					// 输出电压高于目标：减少PWM
 					if (buck_pwm <= 1)

@@ -16,16 +16,17 @@
 #ifndef __MAIN_H
 #define __MAIN_H
 #include "sys.h"
-extern u8 pid_mode;    //=0不工作，=1工作
-extern u16 buck_pwm;   // buck电路的PWM
-extern float DC_V;     // 电压数据
-extern float DC_I;     // 电流数据
-extern float Target_V; // 追踪的电压数据
+extern u8 pid_mode;          //=0不工作，=1工作
+extern u16 buck_pwm;         // buck电路的PWM
+extern float DC_V;           // 电压数据
+extern float DC_I;           // 电流数据
+extern float Target_V;       // 追踪的电压数据
+extern const float V_OFFSET; // 电压偏移量，单位V
 
 extern __IO uint16_t ADC_ConvertedValue[2];
 extern u8 protect_status; // 保护状态
 extern u8 sw_status;      // 开关状态
-#define V_xishu 9.8786
+#define V_xishu 10.1217
 #define I_xishu 2.04
 
 #endif
