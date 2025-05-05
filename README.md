@@ -1,2 +1,5 @@
 # F103_BUCK
-用stm32F103做的一个简易buck电路
+
+用 stm32F103 做的一个简易 buck 电路
+
+工程文件的密码为 NICEGOD
